@@ -1,0 +1,16 @@
+{
+  "name": "voltway",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "Elias CUZEAU",
+  "license": "ISC",
+  "description": "Front end for VoltWay",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}
