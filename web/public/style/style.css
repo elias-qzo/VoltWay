@@ -41,7 +41,7 @@ input[type="text"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgb(70, 161, 73);
+    background-color: #2cf185;
     color: #ffffff;
     border: none;
     border-radius: 4px;
