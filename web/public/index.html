@@ -5,9 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoltWay</title>
     <link rel="stylesheet" href="style/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+    <link rel="icon" href="img/favicon.ico" type="img/x-icon">
 </head>
 <body>
-    <h1>VoltWay</h1>
+    <div id="map"></div>
+    <div class="itineraire-bar">
+        <input type="text" placeholder="Origine">
+        <input type="text" placeholder="Destination">
+        <button><img src="img/arrow.svg" alt="arrow"></button>
+    </div>
+    <div class="dynamic-div">
+        <img src="img/voltway-text.png" id="text-logo" alt="logo">
+        <input type="text" placeholder="Sélectionnez un véhicule">
+    </div>
     <script src="scripts/main.js"></script>
 </body>
 </html>
