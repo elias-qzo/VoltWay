@@ -19,7 +19,26 @@
     </div>
     <div class="dynamic-div">
         <img src="img/voltway-text.png" id="text-logo" alt="logo">
-        <input type="text" placeholder="Sélectionnez un véhicule">
+        <select name="car-brand" id="car-brand">
+            <option value="default">Choississez une marque</option>
+            <option value="Audi">Audi</option>
+            <option value="Cadillac">Cadillac</option>
+            <option value="Ford">Ford</option>
+            <option value="Hyundai">Hyundai</option>
+            <option value="Kia">Kia</option>
+            <option value="Opel">Opel</option>
+            <option value="Tesla">Tesla</option>
+            <option value="XPeng">XPeng</option>
+        </select>
+        <select name="car-model" id="car-model">
+            <option value="default">Choississez un model</option>
+        </select>
+        <div id="car-infos">
+            <img id="car-image" src="car-image" alt="car-image">
+            <p id="car-model-info">Model</p>
+            <p id="car-autonomy-info">Autonomie</p>
+            <p id="car-chargetime-info">Temps de charge</p>
+        </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="scripts/main.js"></script>
