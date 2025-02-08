@@ -14,25 +14,59 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 /* TRAVEL */
 
-function setTravel(origin, destination) {
-    if (window.currentRouteControl) {
-        map.removeControl(window.currentRouteControl);
+let routeLayerGroup = L.layerGroup().addTo(map);
+
+function setTravel(tripWaypoints, chargingStations) {
+    routeLayerGroup.clearLayers();
+
+    if (tripWaypoints.length < 2) return;
+
+    let waypoints = tripWaypoints.map(waypoint => L.latLng(waypoint[1], waypoint[0]));
+
+    for (let i = 0; i < waypoints.length - 1; i++) {
+        let polyline = L.polyline([waypoints[i], waypoints[i + 1]], {
+            color: '#4275f5',
+            weight: 3
+        }).addTo(routeLayerGroup);
     }
 
-    window.currentRouteControl = L.Routing.control({
-        waypoints: [
-            L.latLng(origin["lat"], origin["lon"]),
-            L.latLng(destination["lat"], destination["lon"])
-        ],
-        routeWhileDragging: false,
-        show: false, 
-        addWaypoints: false,
-        lineOptions: {
-            styles: [{ color: '#4275f5', weight: 3 }]
-        }
-    }).addTo(map);
-}
+    L.marker(waypoints[0], {
+        icon: L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+    }).addTo(routeLayerGroup).bindPopup("Point de départ");
 
+    if (tripWaypoints.length > 1) {
+        L.marker(waypoints[waypoints.length - 1], {
+            icon: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            })
+        }).addTo(routeLayerGroup).bindPopup("Destination");
+    }
+
+    chargingStations.forEach(station => {
+        L.marker([station[1], station[0]], {
+            icon: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            })
+        }).addTo(routeLayerGroup);
+    });
+}
 
 travelButton.addEventListener("click",function(){
     let params = {
@@ -43,7 +77,7 @@ travelButton.addEventListener("click",function(){
     api.get('/itinerary', { params })
     .then(response => {
         console.log(response.data);
-        //setTravel(response.data["origin"],response.data["destination"])
+        setTravel(response.data["waypoints"],response.data["charging_stations"])
     })
     .catch(error => {
         console.error("Error :", error);

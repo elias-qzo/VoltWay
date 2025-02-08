@@ -77,6 +77,8 @@ def get_charging_stations_trip(waypoints, autonomy):
     for i in range(len(waypoints) - 2):
         distance += geodesic((waypoints[i][1], waypoints[i][0]), (waypoints[i+1][1], waypoints[i+1][0])).meters
         if distance >= autonomy:
+            print(distance)
+            print("CHARGING")
             closest_station = find_closest_charging_stations({"lat": waypoints[i][1], "lon" : waypoints[i][0]})
             charging_stations.append(closest_station)
             distance = 0
@@ -85,7 +87,7 @@ def get_charging_stations_trip(waypoints, autonomy):
     
 def find_closest_charging_stations(point):
         url = "https://public.opendatasoft.com/api/records/1.0/search"
-        radius = 5000 # meters
+        radius = 20000 # meters
         params = {
             "geofilter.distance": str(point["lat"])+","+str(point["lon"])+","+str(radius),
             "dataset" : "osm-france-charging-station"
@@ -146,7 +148,7 @@ class Itinerary(Resource):
             return {"error": "Cannot get waypoints"}, 400
         
         charging_stations_waypoints = get_charging_stations_trip(initial_waypoints, autonomy)
-        trip_waypoints = charging_stations_waypoints
+        trip_waypoints = charging_stations_waypoints.copy()
         trip_waypoints.insert(0,[origin_coord["lon"],origin_coord["lat"]])
         trip_waypoints.append([destination_coord["lon"],destination_coord["lat"]])
         full_trip = get_full_trip(trip_waypoints)
