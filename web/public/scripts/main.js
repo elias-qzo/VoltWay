@@ -12,6 +12,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
+/* TRAVEL */
+
 function setTravel(origin, destination) {
     if (window.currentRouteControl) {
         map.removeControl(window.currentRouteControl);
@@ -35,17 +37,20 @@ function setTravel(origin, destination) {
 travelButton.addEventListener("click",function(){
     let params = {
         "origin": originInput.value,
-        "destination": destinationInput.value
+        "destination": destinationInput.value,
+        "autonomy": 100
     }
     api.get('/itinerary', { params })
     .then(response => {
         console.log(response.data);
-        setTravel(response.data["origin"],response.data["destination"])
+        //setTravel(response.data["origin"],response.data["destination"])
     })
     .catch(error => {
         console.error("Error :", error);
     });
 })
+
+/* CAR SELECTION */
 
 
 let carBrandSelect = document.getElementById("car-brand")
@@ -117,8 +122,6 @@ function initCarInfo(carData){
     carInfosContainer.style.display = "inline"
     carImage.src = carData['image']
     carModelInfo.innerHTML = `${carData['brand']} ${carData['model']}`
-    carAutonomyInfo.innerHTML = `Autonomie : ${carData['autonomy']} mn`
+    carAutonomyInfo.innerHTML = `Autonomie : ${carData['autonomy']} km`
     carChargetimeInfo.innerHTML = `Temps de charge : ${carData['charge-time']} mn`
 }
-
-carModelSelect
