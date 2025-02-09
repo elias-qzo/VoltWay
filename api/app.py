@@ -6,12 +6,14 @@ from dotenv import load_dotenv
 from geopy.distance import geodesic
 import os
 import openrouteservice
+import xml.etree.ElementTree as ET
 
 load_dotenv()
 PORT = os.getenv("PORT", 6060)
 CHARGETRIP_CLIENT_ID = os.getenv("CHARGETRIP_CLIENT_ID", "NONE")
 CHARGETRIP_APP_ID = os.getenv("CHARGETRIP_APP_ID", "NONE")
 ORS_API_KEY = os.getenv("ORS_API_KEY", "NONE")
+SOAP_API = os.getenv("SOAP_API", "http://127.0.0.1:7000/get_time_cost")
 
 API_REQUEST_HEADER = {
     "User-Agent": "VoltWay/1.0"
@@ -223,6 +225,54 @@ class Vehicles(Resource):
     def get(self):
         brand = request.args.get('brand')
         return get_vehicles_data(brand)
+    
+class TimeCost(Resource):
+    def get(self):
+        time = request.args.get('time', type=int)
+        autonomy = request.args.get('autonomy', type=int)
+        loadTime = request.args.get('loadTime', type=int)
+        distance = request.args.get('distance', type=int)
+        
+        if not time or not loadTime or not autonomy or not distance:
+            return {"error": "Missing arguments"}, 400
+        
+        headers = {
+            "Content-Type": "text/xml; charset=utf-8",
+        }
+
+        soap_body = f"""<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="voltway.soap">
+            <soap:Header/>
+            <soap:Body>
+                <ns:get_time_cost>
+                    <ns:distance>{distance}</ns:distance>
+                    <ns:baseTime>{time}</ns:baseTime>
+                    <ns:loadTime>{loadTime}</ns:loadTime>
+                    <ns:autonomy>{autonomy}</ns:autonomy>
+                </ns:get_time_cost>
+            </soap:Body>
+        </soap:Envelope>
+        """
+
+        response = requests.post(SOAP_API, data=soap_body, headers=headers)
+
+        if response.status_code == 200:
+            root = ET.fromstring(response.text)
+            namespace = {'tns': 'voltway.soap'}
+
+            time_elem = root.find(".//tns:time", namespace)
+            cost_elem = root.find(".//tns:cost", namespace)
+
+            if time_elem is not None and cost_elem is not None:
+                return {
+                    "time": int(time_elem.text),
+                    "cost": float(cost_elem.text)
+                }, 200
+            else:
+                return {"error": "Invalid SOAP response format"}, 500
+
+        else:
+            return {"error": f"SOAP request failed: {response.status_code}"}, response.status_code
 
 #
 # ROUTES
@@ -231,6 +281,7 @@ class Vehicles(Resource):
 api.add_resource(HelloWorld, "/helloworld")
 api.add_resource(Itinerary, "/itinerary")
 api.add_resource(Vehicles, "/vehicles")
+api.add_resource(TimeCost, "/timecost")
 
 
 if __name__ == "__main__":
