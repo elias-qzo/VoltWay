@@ -8,6 +8,13 @@ const originInput = document.getElementById("origin-input")
 const destinationInput = document.getElementById("destination-input")
 const travelButton = document.getElementById("travel-button")
 
+const travelDetails = document.getElementById("travel-infos")
+travelDetails.style.display = "none"
+const travelTime = document.getElementById("travel-time")
+const travelCost = document.getElementById("travel-cost")
+const travelDistance = document.getElementById("travel-distance")
+
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
@@ -68,16 +75,27 @@ function setTravel(tripWaypoints, chargingStations) {
     });
 }
 
+function setTravelDetails(travel){
+    travelDetails.style.display = "inline"
+    travelDistance.innerHTML = "Distance : "+Math.floor(travel.summary.distance / 1000) + " km"
+}
+
 travelButton.addEventListener("click",function(){
+    if (Object.keys(selectedCarData).length === 0) {
+        alert("Vous devez choisir un véhicule")
+        return
+    }
+    
     let params = {
         "origin": originInput.value,
         "destination": destinationInput.value,
-        "autonomy": 100
+        "autonomy": selectedCarData['autonomy']
     }
     api.get('/itinerary', { params })
     .then(response => {
         console.log(response.data);
         setTravel(response.data["waypoints"],response.data["charging_stations"])
+        setTravelDetails(response.data)
     })
     .catch(error => {
         console.error("Error :", error);
@@ -86,11 +104,12 @@ travelButton.addEventListener("click",function(){
 
 /* CAR SELECTION */
 
-
 let carBrandSelect = document.getElementById("car-brand")
 let carModelSelect = document.getElementById("car-model")
 carModelSelect.style.display = "none"
 let carData = []
+let selectedCarData = {}
+
 
 carBrandSelect.addEventListener("change", function () {
     if(carBrandSelect.value == "default"){
@@ -117,6 +136,7 @@ carModelSelect.addEventListener("change", function () {
     if(carModelSelect.value == "default"){
         carInfosContainer.style.display = "none"
     } else {
+        selectedCarData = carData[carModelSelect.value]
         initCarInfo(carData[carModelSelect.value])
     }
 })

@@ -116,3 +116,10 @@ select {
 .leaflet-routing-container {
     display: none;
 }
+
+#travel-infos {
+    padding-left: 10px;
+    width: 220px;
+    border: 2px solid #2bff88;
+    border-radius: 15px;
+}
