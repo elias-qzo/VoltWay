@@ -9,10 +9,10 @@ class TimeCostType(ComplexModel):
     cost = Float
 
 class VotlwaySoapService(ServiceBase):
-    @rpc(Integer, Integer, Integer, Integer, _returns=TimeCostType)
+    @rpc(Float, Float, Integer, Integer, _returns=TimeCostType)
     def get_time_cost(ctx, distance, baseTime, loadTime, autonomy):
         PRICE_PER_MIN = 1.50
-
+        autonomy = autonomy * 1000
         nb_charges = distance // autonomy
         total_load_time = (nb_charges * loadTime)
         time = baseTime + total_load_time

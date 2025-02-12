@@ -79,8 +79,6 @@ def get_charging_stations_trip(waypoints, autonomy):
     for i in range(len(waypoints) - 2):
         distance += geodesic((waypoints[i][1], waypoints[i][0]), (waypoints[i+1][1], waypoints[i+1][0])).meters
         if distance >= autonomy:
-            print(distance)
-            print("CHARGING")
             closest_station = find_closest_charging_stations({"lat": waypoints[i][1], "lon" : waypoints[i][0]})
             charging_stations.append(closest_station)
             distance = 0
@@ -103,7 +101,6 @@ def find_closest_charging_stations(point):
             return None
         
         if not stations:
-            print("No stations")
             return None
         return stations[0]["geometry"]["coordinates"]
 
@@ -127,6 +124,43 @@ def get_full_trip(waypoints):
         else:
             print(f"Error {response.status_code}: {response.reason}")
             return None
+        
+def add_charging(trip, loadTime, autonomy):        
+        headers = {
+            "Content-Type": "text/xml; charset=utf-8",
+        }
+
+        soap_body = f"""<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="voltway.soap">
+            <soap:Header/>
+            <soap:Body>
+                <ns:get_time_cost>
+                    <ns:distance>{trip["summary"]["distance"]}</ns:distance>
+                    <ns:baseTime>{trip["summary"]["duration"]}</ns:baseTime>
+                    <ns:loadTime>{loadTime}</ns:loadTime>
+                    <ns:autonomy>{autonomy}</ns:autonomy>
+                </ns:get_time_cost>
+            </soap:Body>
+        </soap:Envelope>
+        """
+        print(soap_body)
+
+        response = requests.post(SOAP_API, data=soap_body, headers=headers)
+
+        if response.status_code == 200:
+            root = ET.fromstring(response.text)
+            namespace = {'tns': 'voltway.soap'}
+
+            time_elem = root.find(".//tns:time", namespace)
+            cost_elem = root.find(".//tns:cost", namespace)
+            trip["summary"]["cost"] = float(cost_elem.text)
+            trip["summary"]["duration"] = float(time_elem.text)
+
+            return trip
+
+        else:
+            print("Error getting soap")
+
 
 
 class Itinerary(Resource):
@@ -134,6 +168,7 @@ class Itinerary(Resource):
         origin = request.args.get('origin')
         destination = request.args.get('destination')
         autonomy = request.args.get('autonomy')
+        loadTime = request.args.get('load_time')
         
         if not origin or not destination or not autonomy:
             return {"error": "Missing origin, destination or autonomy"}, 400
@@ -155,6 +190,8 @@ class Itinerary(Resource):
         trip_waypoints.append([destination_coord["lon"],destination_coord["lat"]])
         full_trip = get_full_trip(trip_waypoints)
         full_trip["charging_stations"] = charging_stations_waypoints
+
+        full_trip = add_charging(full_trip, loadTime, autonomy)
 
         return full_trip, 200
 
@@ -226,53 +263,6 @@ class Vehicles(Resource):
         brand = request.args.get('brand')
         return get_vehicles_data(brand)
     
-class TimeCost(Resource):
-    def get(self):
-        time = request.args.get('time', type=int)
-        autonomy = request.args.get('autonomy', type=int)
-        loadTime = request.args.get('loadTime', type=int)
-        distance = request.args.get('distance', type=int)
-        
-        if not time or not loadTime or not autonomy or not distance:
-            return {"error": "Missing arguments"}, 400
-        
-        headers = {
-            "Content-Type": "text/xml; charset=utf-8",
-        }
-
-        soap_body = f"""<?xml version="1.0" encoding="utf-8"?>
-        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns="voltway.soap">
-            <soap:Header/>
-            <soap:Body>
-                <ns:get_time_cost>
-                    <ns:distance>{distance}</ns:distance>
-                    <ns:baseTime>{time}</ns:baseTime>
-                    <ns:loadTime>{loadTime}</ns:loadTime>
-                    <ns:autonomy>{autonomy}</ns:autonomy>
-                </ns:get_time_cost>
-            </soap:Body>
-        </soap:Envelope>
-        """
-
-        response = requests.post(SOAP_API, data=soap_body, headers=headers)
-
-        if response.status_code == 200:
-            root = ET.fromstring(response.text)
-            namespace = {'tns': 'voltway.soap'}
-
-            time_elem = root.find(".//tns:time", namespace)
-            cost_elem = root.find(".//tns:cost", namespace)
-
-            if time_elem is not None and cost_elem is not None:
-                return {
-                    "time": int(time_elem.text),
-                    "cost": float(cost_elem.text)
-                }, 200
-            else:
-                return {"error": "Invalid SOAP response format"}, 500
-
-        else:
-            return {"error": f"SOAP request failed: {response.status_code}"}, response.status_code
 
 #
 # ROUTES
@@ -281,7 +271,6 @@ class TimeCost(Resource):
 api.add_resource(HelloWorld, "/helloworld")
 api.add_resource(Itinerary, "/itinerary")
 api.add_resource(Vehicles, "/vehicles")
-api.add_resource(TimeCost, "/timecost")
 
 
 if __name__ == "__main__":
