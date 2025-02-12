@@ -75,9 +75,18 @@ function setTravel(tripWaypoints, chargingStations) {
     });
 }
 
+function formatSecondsToHours(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h${minutes.toString().padStart(2, '0')}`;
+}
+
 function setTravelDetails(travel){
     travelDetails.style.display = "inline"
     travelDistance.innerHTML = "Distance : "+Math.floor(travel.summary.distance / 1000) + " km"
+    travelCost.innerHTML = "Coût : "+travel.summary.cost+ " €"
+    travelTime.innerHTML = "Durée : "+formatSecondsToHours(travel.summary.duration)
+
 }
 
 travelButton.addEventListener("click",function(){
@@ -89,7 +98,8 @@ travelButton.addEventListener("click",function(){
     let params = {
         "origin": originInput.value,
         "destination": destinationInput.value,
-        "autonomy": selectedCarData['autonomy']
+        "autonomy": selectedCarData['autonomy'],
+        "load_time": selectedCarData['charge-time']
     }
     api.get('/itinerary', { params })
     .then(response => {
