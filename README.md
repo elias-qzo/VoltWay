@@ -10,7 +10,7 @@ en Flask et une API SOAP en Flask.
 
 # Documentation des API
 
-[Documentation de l'API REST](api/doc/api_doc.md)
+[Documentation de l'API REST](api/doc/api_doc.md)\
 [Documentation de l'API SOAP](soap/doc/api_doc.md)
 
 ## Installation
