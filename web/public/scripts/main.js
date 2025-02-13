@@ -1,6 +1,6 @@
 const api = axios.create({
     baseURL: 'http://127.0.0.1:6060',
-    timeout: 5000,
+    timeout: 0,
 });
 
 const map = L.map('map').setView([46.603354, 1.888334], 6);
