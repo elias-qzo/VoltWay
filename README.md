@@ -4,7 +4,7 @@ VoltWay est une application web qui permet d'anticiper un voyage en voiture
 électrique sans se soucier de l'autonomie de celle-ci. Les bornes de rechargement 
 sont incluses automatiquement dans le trajet lorsque la batterie du véhicule atteint 
 un seuil critique. VoltWay fonctionne avec un front web en Express.js, une API REST 
-en Flask et une API SOAP en Flask.
+en Flask et une API SOAP avec Spyne.
 
 ---
 
@@ -55,7 +55,7 @@ npm start
 ## Technologies utilisées
 
 ### Backend
-- Python (Flask) pour l'API REST et l'API SOAP
+- Python (Flask) pour l'API REST
 - Requests, Flask-RESTful, Spyne pour SOAP
 
 ### Frontend
